@@ -1,0 +1,10 @@
+GET http://localhost:3000/jwks
+
+### 
+
+# @name getTokenReq
+GET http://localhost:3000/get-jwt
+
+###
+@token={{getTokenReq.response.body.token}}
+GET http://localhost:3000/check/{{token}}
