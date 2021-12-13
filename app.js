@@ -29,7 +29,7 @@ let privateKey, publicKey;
 })();
 
 app.get('/get-jwt', async (req, res, next) => {
-  const jwt = await new jose.SignJWT({ 'name': 'Wooclap' })
+  const jwt = await new jose.SignJWT({ 'name': 'token' })
   .setProtectedHeader({ alg: 'ES256' })
   .setIssuedAt()
   .setIssuer('example:issuer')
