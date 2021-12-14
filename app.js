@@ -11,7 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
 
-const JWKS = jose.createRemoteJWKSet(new URL('http://localhost:3000/jwks'));
+const JWKS = jose.createRemoteJWKSet(new URL('http://localhost:3000/.well-known/jwks.json'));
 
 let privateKey, publicKey;
 (async () => {
@@ -30,7 +30,7 @@ let privateKey, publicKey;
 
 app.get('/get-jwt', async (req, res, next) => {
   const jwt = await new jose.SignJWT({ 'name': 'token' })
-  .setProtectedHeader({ alg: 'ES256' })
+  .setProtectedHeader({ alg: 'ES256', kid: 'example:kid' })
   .setIssuedAt()
   .setIssuer('example:issuer')
   .setAudience('example:audience')
@@ -40,21 +40,31 @@ app.get('/get-jwt', async (req, res, next) => {
   res.send({ token: jwt });
 });
 
+/**
+ * This endpoint is weird: it tries to simulate the LMS.
+ * First, it will get all the JWK Sets,
+ * Then, it will find the correct one using the provided kid,
+ * Finally, it will try to JwtVerify it using that JWK.
+ */
 app.get('/check/:jwt', async (req, res, next) => {
   try {
-    await jose.jwtVerify(req.params.jwt, JWKS, {
+    const protectedHeader = jose.decodeProtectedHeader(req.params.jwt);
+
+    await jose.jwtVerify(req.params.jwt, await JWKS({alg: protectedHeader.alg, kid: protectedHeader.kid}, {}), {
       issuer: 'example:issuer',
       audience: 'example:audience'
     });
 
     res.send({token: req.params.jwt, correct: true});
   } catch (err) {
+    console.log(err);
     res.send({token: req.params.jwt, correct: false});
   }
 });
 
 app.get('/.well-known/jwks.json', async (req, res, next) => {
   const jwk = await jose.exportJWK(publicKey);
+  jwk.kid = "example:kid";
 
   res.send({ keys: [jwk]});
 });
