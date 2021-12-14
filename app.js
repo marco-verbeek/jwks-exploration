@@ -53,7 +53,7 @@ app.get('/check/:jwt', async (req, res, next) => {
   }
 });
 
-app.get('/jwks', async (req, res, next) => {
+app.get('/.well-known/jwks.json', async (req, res, next) => {
   const jwk = await jose.exportJWK(publicKey);
 
   res.send({ keys: [jwk]});

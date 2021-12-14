@@ -1,4 +1,4 @@
-GET http://localhost:3000/jwks
+GET http://localhost:3000/.well-known/jwks.json
 
 ### 
 
